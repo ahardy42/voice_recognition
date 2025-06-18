@@ -15,6 +15,8 @@ let analyser: AnalyserNode | null = null;
 let microphone: MediaStreamAudioSourceNode | null = null;
 let dataArray: Uint8Array | null = null;
 let animationId: number | null = null;
+let lastBackgroundUpdate = 0;
+let currentVoiceLevel = 'voice-medium'; // Track current level to prevent unnecessary changes
 
 // DOM elements
 let isListening = false;
@@ -22,53 +24,6 @@ let isTransitioning = false;
 let finalTranscript = '';
 let interimTranscript = '';
 let waveformAnimationId: number | null = null;
-
-// Create the UI
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div class="voice-app">
-    <h1>Voice Recognition App</h1>
-    <div class="status-container">
-      <div id="status" class="status">Click the button to start speaking</div>
-    </div>
-    <div class="button-container">
-      <button id="startBtn" class="start-btn">
-        <span class="btn-text">Start Listening</span>
-        <div class="waveform">
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-        </div>
-      </button>
-    </div>
-    <div class="transcript-container">
-      <h3>What you said:</h3>
-      <div id="transcript" class="transcript"></div>
-    </div>
-    <div class="clear-container">
-      <button id="clearBtn" class="clear-btn">Clear Text</button>
-    </div>
-  </div>
-  
-  <!-- Microphone Permission Modal -->
-  <div id="micModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Microphone Access Required</h2>
-      </div>
-      <div class="modal-body">
-        <div class="mic-icon">🎤</div>
-        <p>This app needs access to your microphone to provide voice recognition and visual feedback.</p>
-        <p>Click "Allow" when your browser asks for microphone permission.</p>
-      </div>
-      <div class="modal-footer">
-        <button id="requestMicBtn" class="request-mic-btn">Request Microphone Access</button>
-        <button id="cancelMicBtn" class="cancel-mic-btn">Cancel</button>
-      </div>
-    </div>
-  </div>
-`;
 
 // Get DOM elements
 const startBtn = document.getElementById('startBtn') as HTMLButtonElement;
@@ -80,12 +35,15 @@ const btnText = startBtn.querySelector('.btn-text') as HTMLSpanElement;
 const micModal = document.getElementById('micModal') as HTMLDivElement;
 const requestMicBtn = document.getElementById('requestMicBtn') as HTMLButtonElement;
 const cancelMicBtn = document.getElementById('cancelMicBtn') as HTMLButtonElement;
+const errorModal = document.getElementById('errorModal') as HTMLDivElement;
+const closeErrorBtn = document.getElementById('closeErrorBtn') as HTMLButtonElement;
 
 // Event listeners
 startBtn.addEventListener('click', handleStartClick);
 clearBtn.addEventListener('click', clearTranscript);
 requestMicBtn.addEventListener('click', requestMicrophoneAccess);
 cancelMicBtn.addEventListener('click', closeMicModal);
+closeErrorBtn.addEventListener('click', closeErrorModal);
 
 // Modal functions
 function showMicModal(): void {
@@ -100,17 +58,35 @@ function closeMicModal(): void {
   }, 300);
 }
 
+function showErrorModal(): void {
+  errorModal.style.display = 'flex';
+  errorModal.classList.add('show');
+  
+  // Auto-close after 10 seconds
+  setTimeout(() => {
+    closeErrorModal();
+  }, 10000);
+}
+
+function closeErrorModal(): void {
+  errorModal.classList.remove('show');
+  setTimeout(() => {
+    errorModal.style.display = 'none';
+  }, 300);
+}
+
 async function requestMicrophoneAccess(): Promise<void> {
   try {
     closeMicModal();
     status.textContent = 'Requesting microphone access...';
-    status.className = 'status';
+    status.className = 'status requesting';
     
     // Request microphone access
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     
     // If we get here, permission was granted
     status.textContent = 'Microphone access granted! Starting...';
+    status.className = 'status granted';
     
     // Start the actual voice recognition
     await startVoiceRecognition();
@@ -124,8 +100,8 @@ async function requestMicrophoneAccess(): Promise<void> {
         status.textContent = 'Microphone access denied. Please check your browser settings and try again.';
         status.className = 'status error';
         
-        // Show a more detailed error modal
-        showPermissionErrorModal();
+        // Show the error modal
+        showErrorModal();
       } else {
         status.textContent = `Error: ${error.message}`;
         status.className = 'status error';
@@ -135,47 +111,6 @@ async function requestMicrophoneAccess(): Promise<void> {
       status.className = 'status error';
     }
   }
-}
-
-function showPermissionErrorModal(): void {
-  // Create and show a detailed error modal
-  const errorModal = document.createElement('div');
-  errorModal.className = 'modal show';
-  errorModal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header error-header">
-        <h2>Microphone Access Blocked</h2>
-      </div>
-      <div class="modal-body">
-        <div class="error-icon">🔒</div>
-        <p><strong>Your browser has blocked microphone access for this site.</strong></p>
-        <p>To use voice recognition, you need to reset the microphone permission:</p>
-        <div class="browser-instructions">
-          <h4>Chrome/Edge:</h4>
-          <p>Click the lock icon 🔒 in the address bar → Site settings → Microphone → Allow</p>
-          
-          <h4>Firefox:</h4>
-          <p>Click the shield icon 🛡️ in the address bar → Permissions → Microphone → Allow</p>
-          
-          <h4>Safari:</h4>
-          <p>Safari → Preferences → Websites → Microphone → Allow for this website</p>
-        </div>
-        <p><strong>After changing the setting, refresh the page and try again.</strong></p>
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-mic-btn" onclick="this.closest('.modal').remove()">Close</button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(errorModal);
-  
-  // Auto-remove after 10 seconds
-  setTimeout(() => {
-    if (errorModal.parentNode) {
-      errorModal.remove();
-    }
-  }, 10000);
 }
 
 function handleStartClick(): void {
@@ -210,75 +145,71 @@ async function startVoiceRecognition(): Promise<void> {
   }
 }
 
-// Color generation functions
-function generateColorFromFrequency(frequency: number, amplitude: number, isListening: boolean): string {
-  if (isListening) {
-    // Warm tones when listening (oranges, reds, yellows)
-    const baseHue = 30; // Start with orange
-    const hueVariation = 60; // Range for warm colors
-    const hue = baseHue + ((frequency / 255) * hueVariation - hueVariation / 2);
-    
-    // Map amplitude to saturation with a smaller range (40-70%)
-    const saturation = Math.max(40, Math.min(70, 40 + (amplitude / 255) * 30));
-    
-    // Map amplitude to lightness with a smaller range (25-45%)
-    const lightness = Math.max(25, Math.min(45, 35 + (amplitude / 255) * 10));
-    
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  } else {
-    // Cool tones when not listening (blues, purples)
-    const baseHue = 260; // Start with purple
-    const hueVariation = 60; // Smaller range for subtle changes
-    const hue = baseHue + ((frequency / 255) * hueVariation - hueVariation / 2);
-    
-    // Map amplitude to saturation with a smaller range (40-70%)
-    const saturation = Math.max(40, Math.min(70, 40 + (amplitude / 255) * 30));
-    
-    // Map amplitude to lightness with a smaller range (25-45%)
-    const lightness = Math.max(25, Math.min(45, 35 + (amplitude / 255) * 10));
-    
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  }
-}
-
 function updateBackgroundColor(audioData: Uint8Array): void {
   if (!audioData || audioData.length === 0) return;
   
-  // Calculate average frequency and amplitude
-  const avgFrequency = audioData.reduce((sum, val) => sum + val, 0) / audioData.length;
-  const maxAmplitude = Math.max(...Array.from(audioData));
+  // Only update background if we're listening and not in transition
+  if (!isListening || isTransitioning) return;
   
-  // Generate colors for gradient with more subtle variation
-  const color1 = generateColorFromFrequency(avgFrequency, maxAmplitude, isListening);
-  const color2 = generateColorFromFrequency((avgFrequency + 30) % 255, maxAmplitude * 0.9, isListening);
+  // Much more aggressive throttling (update max every 500ms)
+  const now = Date.now();
+  if (now - lastBackgroundUpdate < 500) return;
+  lastBackgroundUpdate = now;
   
-  // Apply gradient to body
-  document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+  // Calculate average amplitude over multiple samples for smoothing
+  const amplitudes = Array.from(audioData);
+  const avgAmplitude = amplitudes.reduce((sum, val) => sum + val, 0) / amplitudes.length;
+  
+  // Determine new voice level with less sensitive thresholds
+  let newVoiceLevel = 'voice-medium'; // Default
+  
+  if (avgAmplitude < 30) {
+    newVoiceLevel = 'voice-low';
+  } else if (avgAmplitude < 80) {
+    newVoiceLevel = 'voice-medium';
+  } else if (avgAmplitude < 150) {
+    newVoiceLevel = 'voice-high';
+  } else {
+    newVoiceLevel = 'voice-intense';
+  }
+  
+  // Only update if the level actually changed
+  if (newVoiceLevel !== currentVoiceLevel) {
+    // Remove all voice intensity classes
+    document.body.classList.remove('voice-low', 'voice-medium', 'voice-high', 'voice-intense');
+    
+    // Add new voice level class
+    document.body.classList.add(newVoiceLevel);
+    
+    // Update current level
+    currentVoiceLevel = newVoiceLevel;
+  }
 }
 
 function transitionToListening(): void {
   isTransitioning = true;
-  document.body.classList.add('transitioning');
+  currentVoiceLevel = 'voice-medium'; // Reset voice level
   
-  // Set a warm transition color
-  document.body.style.background = 'linear-gradient(135deg, hsl(45, 60%, 35%) 0%, hsl(25, 60%, 35%) 100%)';
+  // Remove all background classes
+  document.body.classList.remove('listening', 'not-listening', 'voice-low', 'voice-medium', 'voice-high', 'voice-intense');
+  
+  // Add listening class for warm background
+  document.body.classList.add('listening');
   
   setTimeout(() => {
     isTransitioning = false;
-    document.body.classList.remove('transitioning');
   }, 800); // Match the CSS transition duration
 }
 
 function transitionToNotListening(): void {
   isTransitioning = true;
-  document.body.classList.add('transitioning');
+  currentVoiceLevel = 'voice-medium'; // Reset voice level
   
-  // Set a cool transition color
-  document.body.style.background = 'linear-gradient(135deg, hsl(260, 60%, 35%) 0%, hsl(240, 60%, 35%) 100%)';
+  // Remove all background classes to return to default
+  document.body.classList.remove('listening', 'not-listening', 'voice-low', 'voice-medium', 'voice-high', 'voice-intense');
   
   setTimeout(() => {
     isTransitioning = false;
-    document.body.classList.remove('transitioning');
   }, 800); // Match the CSS transition duration
 }
 
@@ -327,10 +258,13 @@ function animateWaveformFromAudio(): void {
     const dataIndex = Math.floor((index / barCount) * dataArray!.length);
     const value = dataArray![dataIndex];
     
-    // Convert to height percentage (0-255 to 5-100%)
-    const height = Math.max(5, (value / 255) * 95);
+    // Remove all level classes
+    bar.classList.remove('level-1', 'level-2', 'level-3', 'level-4', 'level-5', 
+                        'level-6', 'level-7', 'level-8', 'level-9', 'level-10');
     
-    (bar as HTMLElement).style.height = `${height}%`;
+    // Convert to level (1-10) and add appropriate class
+    const level = Math.max(1, Math.min(10, Math.ceil((value / 255) * 10)));
+    bar.classList.add(`level-${level}`);
   });
 }
 
@@ -349,10 +283,11 @@ function stopAudioAnimation(): void {
     animationId = null;
   }
   
-  // Reset bars to default height
+  // Reset bars to default state
   const bars = waveform.querySelectorAll('.waveform-bar');
   bars.forEach((bar) => {
-    (bar as HTMLElement).style.height = '5%';
+    bar.classList.remove('level-1', 'level-2', 'level-3', 'level-4', 'level-5', 
+                        'level-6', 'level-7', 'level-8', 'level-9', 'level-10');
   });
 }
 

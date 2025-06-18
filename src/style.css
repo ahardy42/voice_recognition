@@ -23,10 +23,36 @@ body.transitioning {
   transition: background 0.8s ease;
 }
 
-#app {
-  width: 100%;
-  max-width: 600px;
-  padding: 20px;
+/* Warm background for listening state - no automatic animation */
+body.listening {
+  background: linear-gradient(135deg, hsl(30, 70%, 45%) 0%, hsl(15, 70%, 45%) 100%);
+  transition: background 0.3s ease;
+}
+
+/* Dynamic voice-responsive backgrounds - much more subtle changes */
+body.listening.voice-low {
+  background: linear-gradient(135deg, hsl(28, 68%, 43%) 0%, hsl(13, 68%, 43%) 100%);
+}
+
+body.listening.voice-medium {
+  background: linear-gradient(135deg, hsl(30, 70%, 45%) 0%, hsl(15, 70%, 45%) 100%);
+}
+
+body.listening.voice-high {
+  background: linear-gradient(135deg, hsl(32, 72%, 47%) 0%, hsl(17, 72%, 47%) 100%);
+}
+
+body.listening.voice-intense {
+  background: linear-gradient(135deg, hsl(35, 75%, 50%) 0%, hsl(20, 75%, 50%) 100%);
+}
+
+/* Background color states - order matters for specificity */
+body.not-listening {
+  background: linear-gradient(135deg, hsl(260, 60%, 35%) 0%, hsl(240, 60%, 35%) 100%);
+}
+
+body.not-listening.voice-cool {
+  background: linear-gradient(135deg, hsl(260, 55%, 35%) 0%, hsl(245, 55%, 35%) 100%);
 }
 
 .voice-app {
@@ -35,6 +61,8 @@ body.transitioning {
   padding: 40px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
+  width: 60%;
+  max-width: 600px;
 }
 
 .voice-app h1 {
@@ -48,6 +76,7 @@ body.transitioning {
   margin-bottom: 30px;
 }
 
+/* Status states */
 .status {
   padding: 15px 25px;
   border-radius: 50px;
@@ -70,6 +99,16 @@ body.transitioning {
   color: #721c24;
 }
 
+.status.requesting {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.granted {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -86,6 +125,7 @@ body.transitioning {
   margin-bottom: 40px;
 }
 
+/* Button states */
 .start-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -123,7 +163,7 @@ body.transitioning {
   white-space: nowrap;
 }
 
-/* Waveform styles */
+/* Waveform states */
 .waveform {
   display: flex;
   align-items: flex-end;
@@ -151,6 +191,18 @@ body.transitioning {
   transition: height 0.1s ease;
   min-height: 2px;
 }
+
+/* Waveform bar height classes for audio response */
+.waveform-bar.level-1 { height: 10%; }
+.waveform-bar.level-2 { height: 20%; }
+.waveform-bar.level-3 { height: 30%; }
+.waveform-bar.level-4 { height: 40%; }
+.waveform-bar.level-5 { height: 50%; }
+.waveform-bar.level-6 { height: 60%; }
+.waveform-bar.level-7 { height: 70%; }
+.waveform-bar.level-8 { height: 80%; }
+.waveform-bar.level-9 { height: 90%; }
+.waveform-bar.level-10 { height: 100%; }
 
 .transcript-container {
   text-align: left;

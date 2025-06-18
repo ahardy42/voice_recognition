@@ -1,13 +1,86 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voice Recognition App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Recognition App</title>
+</head>
+
+<body>
+  <div class="voice-app">
+    <h1>Voice Recognition App</h1>
+    <div class="status-container">
+      <div id="status" class="status">Click the button to start speaking</div>
+    </div>
+    <div class="button-container">
+      <button id="startBtn" class="start-btn">
+        <span class="btn-text">Start Listening</span>
+        <div class="waveform">
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+        </div>
+      </button>
+    </div>
+    <div class="transcript-container">
+      <h3>What you said:</h3>
+      <div id="transcript" class="transcript"></div>
+    </div>
+    <div class="clear-container">
+      <button id="clearBtn" class="clear-btn">Clear Text</button>
+    </div>
+  </div>
+
+  <!-- Microphone Permission Modal -->
+  <div id="micModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Microphone Access Required</h2>
+      </div>
+      <div class="modal-body">
+        <div class="mic-icon">🎤</div>
+        <p>This app needs access to your microphone to provide voice recognition and visual feedback.</p>
+        <p>Click "Allow" when your browser asks for microphone permission.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="requestMicBtn" class="request-mic-btn">Request Microphone Access</button>
+        <button id="cancelMicBtn" class="cancel-mic-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Error Modal -->
+  <div id="errorModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header error-header">
+        <h2>Microphone Access Blocked</h2>
+      </div>
+      <div class="modal-body">
+        <div class="error-icon">🔒</div>
+        <p><strong>Your browser has blocked microphone access for this site.</strong></p>
+        <p>To use voice recognition, you need to reset the microphone permission:</p>
+        <div class="browser-instructions">
+          <h4>Chrome/Edge:</h4>
+          <p>Click the lock icon 🔒 in the address bar → Site settings → Microphone → Allow</p>
+
+          <h4>Firefox:</h4>
+          <p>Click the shield icon 🛡️ in the address bar → Permissions → Microphone → Allow</p>
+
+          <h4>Safari:</h4>
+          <p>Safari → Preferences → Websites → Microphone → Allow for this website</p>
+        </div>
+        <p><strong>After changing the setting, refresh the page and try again.</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button id="closeErrorBtn" class="cancel-mic-btn">Close</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>
