@@ -11,10 +11,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: 100% 100%;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.8s ease;
+}
+
+body.transitioning {
+  transition: background 0.8s ease;
 }
 
 #app {
@@ -91,6 +97,12 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 200px;
+  justify-content: center;
+  margin: auto;
 }
 
 .start-btn:hover {
@@ -105,6 +117,39 @@ body {
 
 .start-btn.listening:hover {
   box-shadow: 0 15px 30px rgba(220, 53, 69, 0.4);
+}
+
+.btn-text {
+  white-space: nowrap;
+}
+
+/* Waveform styles */
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 30px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  width: 0;
+  overflow: hidden;
+}
+
+.start-btn.listening .waveform {
+  opacity: 1;
+  visibility: visible;
+  width: auto;
+  overflow: visible;
+}
+
+.waveform-bar {
+  width: 4px;
+  height: 20%;
+  background: white;
+  border-radius: 2px;
+  transition: height 0.1s ease;
+  min-height: 2px;
 }
 
 .transcript-container {
@@ -187,6 +232,15 @@ body {
   .start-btn {
     padding: 12px 30px;
     font-size: 1.1rem;
+    min-width: 180px;
+  }
+  
+  .waveform {
+    height: 25px;
+  }
+  
+  .waveform-bar {
+    width: 3px;
   }
   
   .clear-btn {
