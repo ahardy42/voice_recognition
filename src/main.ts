@@ -4,6 +4,7 @@ import './style.css'
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 
+
 // Configure recognition settings
 recognition.continuous = true; // Enable continuous recognition
 recognition.interimResults = true; // Show interim results as you speak
