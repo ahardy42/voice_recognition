@@ -266,4 +266,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Note**: This application requires microphone access and works best in modern browsers with Web Speech API support. For production use, ensure your hosting environment supports HTTPS. The GitHub Pages deployment automatically provides HTTPS. 
+**Note**: This application requires microphone access and works best in modern browsers with Web Speech API support. For production use, ensure your hosting environment supports HTTPS. The GitHub Pages deployment automatically provides HTTPS. # Test comment
