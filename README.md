@@ -10,6 +10,7 @@ A modern, interactive voice recognition web application that provides real-time 
 - **Responsive Design**: Works on desktop and mobile devices
 - **Permission Management**: Graceful handling of microphone permissions
 - **TypeScript**: Fully typed codebase for better development experience
+- **GitHub Pages Ready**: Automated deployment with GitHub Actions
 
 ## 🛠️ Technology Stack
 
@@ -23,6 +24,7 @@ A modern, interactive voice recognition web application that provides real-time 
 - `typescript` (~5.8.3) - TypeScript compiler
 - `vite` (^6.3.5) - Build tool and dev server
 - `@types/dom-speech-recognition` (^0.0.6) - TypeScript definitions for Web Speech API
+- `@types/node` (^20.0.0) - Node.js type definitions
 
 ## 📦 Installation & Setup
 
@@ -65,7 +67,53 @@ A modern, interactive voice recognition web application that provides real-time 
    npm run preview
    ```
 
+3. **Use the deployment script**
+   ```bash
+   ./scripts/deploy.sh
+   ```
+
 The built files will be in the `dist/` directory, ready for deployment to any static hosting service.
+
+## 🌐 GitHub Pages Deployment
+
+This repository is configured for automatic deployment to GitHub Pages using GitHub Actions.
+
+### Automatic Deployment
+- **Trigger**: Every push to the `main` branch
+- **Workflow**: `.github/workflows/deploy.yml`
+- **URL**: `https://[your-username].github.io/voice_recognition/`
+
+### Setup Instructions
+
+1. **Enable GitHub Pages** (if not already enabled):
+   - Go to your repository on GitHub
+   - Navigate to Settings → Pages
+   - Select "GitHub Actions" as the source
+   - The workflow will automatically deploy on pushes to main
+
+2. **Push your changes**:
+   ```bash
+   git add .
+   git commit -m "Setup GitHub Pages deployment"
+   git push origin main
+   ```
+
+3. **Monitor deployment**:
+   - Go to Actions tab in your repository
+   - Watch the "Deploy to GitHub Pages" workflow
+   - Your app will be live once the workflow completes
+
+### Manual Deployment
+If you need to deploy manually or test locally:
+
+```bash
+# Build and test locally
+npm run build
+npm run preview
+
+# Or use the deployment script
+./scripts/deploy.sh
+```
 
 ## 🔧 How It Works
 
@@ -147,12 +195,16 @@ The app implements a robust permission handling system:
 
 ## 🚀 Deployment
 
-### Static Hosting
+### GitHub Pages (Recommended)
+- **Automatic**: Configured with GitHub Actions
+- **URL**: `https://[your-username].github.io/voice_recognition/`
+- **HTTPS**: Automatically provided by GitHub Pages
+
+### Other Static Hosting Options
 The built application can be deployed to any static hosting service:
 
 - **Netlify**: Drag and drop the `dist/` folder
 - **Vercel**: Connect your repository for automatic deployments
-- **GitHub Pages**: Deploy from the `dist/` branch
 - **AWS S3**: Upload files to an S3 bucket with static website hosting
 
 ### Environment Requirements
@@ -179,6 +231,11 @@ The built application can be deployed to any static hosting service:
    - Verify microphone permissions are granted
    - Check browser console for Web Audio API errors
 
+4. **GitHub Pages deployment issues**
+   - Check the Actions tab for workflow errors
+   - Ensure the repository name matches the base path in `vite.config.ts`
+   - Verify GitHub Pages is enabled in repository settings
+
 ### Browser-Specific Notes
 
 - **Chrome**: Best support, recommended for development
@@ -193,6 +250,7 @@ The built application can be deployed to any static hosting service:
 - [MediaDevices API](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices)
 - [Vite Documentation](https://vitejs.dev/)
 - [TypeScript Documentation](https://www.typescriptlang.org/)
+- [GitHub Pages Documentation](https://docs.github.com/en/pages)
 
 ## 🤝 Contributing
 
@@ -208,4 +266,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Note**: This application requires microphone access and works best in modern browsers with Web Speech API support. For production use, ensure your hosting environment supports HTTPS. 
+**Note**: This application requires microphone access and works best in modern browsers with Web Speech API support. For production use, ensure your hosting environment supports HTTPS. The GitHub Pages deployment automatically provides HTTPS. 
