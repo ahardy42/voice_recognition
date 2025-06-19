@@ -23,7 +23,6 @@ let isListening = false;
 let isTransitioning = false;
 let finalTranscript = '';
 let interimTranscript = '';
-let waveformAnimationId: number | null = null;
 
 // Get DOM elements
 const startBtn = document.getElementById('startBtn') as HTMLButtonElement;
@@ -82,7 +81,7 @@ async function requestMicrophoneAccess(): Promise<void> {
     status.className = 'status requesting';
     
     // Request microphone access
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    await navigator.mediaDevices.getUserMedia({ audio: true });
     
     // If we get here, permission was granted
     status.textContent = 'Microphone access granted! Starting...';
@@ -375,14 +374,6 @@ recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
   
   cleanupAudio();
 };
-
-function toggleListening(): void {
-  if (isListening) {
-    recognition.stop();
-  } else {
-    recognition.start();
-  }
-}
 
 function clearTranscript(): void {
   finalTranscript = '';
